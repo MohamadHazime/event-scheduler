@@ -17,6 +17,8 @@ public static class EventEndpoints
         group.MapPost("/", CreateEvent);
         group.MapPut("/{id:guid}", UpdateEvent);
         group.MapDelete("/{id:guid}", DeleteEvent);
+        group.MapPut("/{id:guid}/status", UpdateStatus);
+        group.MapGet("/{id:guid}/attendees", GetAttendees);
     }
 
     private static async Task<IResult> GetEvents(
@@ -48,6 +50,18 @@ public static class EventEndpoints
     private static async Task<IResult> DeleteEvent(Guid id, IMediator mediator)
     {
         var result = await mediator.Send(new DeleteEventCommand(id));
+        return ToResponse(result);
+    }
+
+    private static async Task<IResult> UpdateStatus(Guid id, UpdateStatusRequest request, IMediator mediator)
+    {
+        var result = await mediator.Send(new UpdateAttendanceStatusCommand(id, request.Status));
+        return ToResponse(result);
+    }
+
+    private static async Task<IResult> GetAttendees(Guid id, IMediator mediator)
+    {
+        var result = await mediator.Send(new GetEventAttendeesQuery(id));
         return ToResponse(result);
     }
 

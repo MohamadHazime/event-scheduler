@@ -82,5 +82,6 @@ app.UseAuthorization();
 app.MapAuthEndpoints();
 app.MapEventEndpoints();
 app.MapInvitationEndpoints();
+app.MapSmartEndpoints();
 
 app.Run();

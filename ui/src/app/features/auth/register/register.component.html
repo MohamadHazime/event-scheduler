@@ -1,0 +1,105 @@
+<div class="min-h-screen flex items-center justify-center px-4 bg-gray-50 dark:bg-gray-950">
+  <div class="w-full max-w-md">
+    <div class="text-center mb-8">
+      <h1 class="text-3xl font-bold text-primary-600 dark:text-primary-400">EventScheduler</h1>
+      <p class="mt-2 text-gray-600 dark:text-gray-400">Create your account to get started</p>
+    </div>
+
+    <div class="card">
+      <h2 class="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-6">Create Account</h2>
+
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+        <div>
+          <label for="fullName" class="label">Full Name</label>
+          <input
+            id="fullName"
+            type="text"
+            formControlName="fullName"
+            class="input-field"
+            placeholder="John Doe"
+          />
+          @if (form.get('fullName')?.touched && form.get('fullName')?.hasError('required')) {
+            <p class="error-text">Full name is required.</p>
+          }
+          @if (form.get('fullName')?.touched && form.get('fullName')?.hasError('minlength')) {
+            <p class="error-text">Name must be at least 2 characters.</p>
+          }
+        </div>
+
+        <div>
+          <label for="email" class="label">Email</label>
+          <input
+            id="email"
+            type="email"
+            formControlName="email"
+            class="input-field"
+            placeholder="you@example.com"
+          />
+          @if (form.get('email')?.touched && form.get('email')?.hasError('required')) {
+            <p class="error-text">Email is required.</p>
+          }
+          @if (form.get('email')?.touched && form.get('email')?.hasError('email')) {
+            <p class="error-text">Please enter a valid email.</p>
+          }
+        </div>
+
+        <div>
+          <label for="password" class="label">Password</label>
+          <input
+            id="password"
+            type="password"
+            formControlName="password"
+            class="input-field"
+            placeholder="••••••••"
+          />
+          @if (form.get('password')?.touched && form.get('password')?.hasError('required')) {
+            <p class="error-text">Password is required.</p>
+          }
+          @if (form.get('password')?.touched && form.get('password')?.hasError('minlength')) {
+            <p class="error-text">Password must be at least 6 characters.</p>
+          }
+        </div>
+
+        <div>
+          <label for="confirmPassword" class="label">Confirm Password</label>
+          <input
+            id="confirmPassword"
+            type="password"
+            formControlName="confirmPassword"
+            class="input-field"
+            placeholder="••••••••"
+          />
+          @if (form.get('confirmPassword')?.touched && form.get('confirmPassword')?.hasError('required')) {
+            <p class="error-text">Please confirm your password.</p>
+          }
+          @if (form.get('confirmPassword')?.touched && form.hasError('passwordMismatch')) {
+            <p class="error-text">Passwords do not match.</p>
+          }
+        </div>
+
+        <button
+          type="submit"
+          [disabled]="loading"
+          class="btn-primary w-full flex items-center justify-center gap-2"
+        >
+          @if (loading) {
+            <svg class="animate-spin h-5 w-5" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+            </svg>
+            Creating account...
+          } @else {
+            Create Account
+          }
+        </button>
+      </form>
+
+      <p class="mt-6 text-center text-sm text-gray-600 dark:text-gray-400">
+        Already have an account?
+        <a routerLink="/login" class="text-primary-600 dark:text-primary-400 font-medium hover:underline">
+          Sign in
+        </a>
+      </p>
+    </div>
+  </div>
+</div>

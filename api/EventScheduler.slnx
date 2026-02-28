@@ -1,0 +1,8 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/EventScheduler.API/EventScheduler.API.csproj" Id="3b18881f-a346-43fa-a8f7-778fd246340a" />
+    <Project Path="src/EventScheduler.Application/EventScheduler.Application.csproj" Id="3fff8d2a-f333-489b-aa1e-526ae7f5bf4b" />
+    <Project Path="src/EventScheduler.Domain/EventScheduler.Domain.csproj" />
+    <Project Path="src/EventScheduler.Infrastructure/EventScheduler.Infrastructure.csproj" Id="55508201-6e16-41d1-9c8f-ddbbb28ac45f" />
+  </Folder>
+</Solution>

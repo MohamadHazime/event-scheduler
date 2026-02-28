@@ -1,10 +1,12 @@
-﻿using EventScheduler.Domain.EventAttendees.Interfaces;
+﻿using EventScheduler.Application.Interfaces;
+using EventScheduler.Domain.EventAttendees.Interfaces;
 using EventScheduler.Domain.Events.Interfaces;
 using EventScheduler.Domain.Interfaces;
 using EventScheduler.Domain.Invitations.Interfaces;
 using EventScheduler.Domain.Users.Interfaces;
 using EventScheduler.Infrastructure.Data;
 using EventScheduler.Infrastructure.Repositories;
+using EventScheduler.Infrastructure.Services;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
@@ -23,6 +25,9 @@ public static class DependencyInjection
         services.AddScoped<IEventAttendeeRepository, EventAttendeeRepository>();
         services.AddScoped<IInvitationRepository, InvitationRepository>();
         services.AddScoped<IUnitOfWork, UnitOfWork>();
+
+        services.AddScoped<ITokenService, JwtTokenService>();
+        services.AddScoped<IPasswordHasher, PasswordHasher>();
 
         return services;
     }

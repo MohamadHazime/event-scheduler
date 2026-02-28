@@ -28,7 +28,7 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddInfrastructure(builder.Configuration);
 
 builder.Services.AddMediatR(cfg =>
-    cfg.RegisterServicesFromAssembly(typeof(EventScheduler.Application.Interfaces.ICurrentUserService).Assembly));
+    cfg.RegisterServicesFromAssembly(typeof(ICurrentUserService).Assembly));
 
 builder.Services.AddHttpContextAccessor();
 builder.Services.AddScoped<ICurrentUserService, CurrentUserService>();
@@ -80,5 +80,6 @@ app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapAuthEndpoints();
+app.MapEventEndpoints();
 
 app.Run();

@@ -104,16 +104,22 @@
         <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
           <div>
             <label for="startDate" class="label">Start Date & Time *</label>
-            <input id="startDate" type="datetime-local" formControlName="startDate" class="input-field" />
+            <input id="startDate" type="datetime-local" formControlName="startDate" class="input-field" [min]="minDateTime" />
             @if (form.get('startDate')?.touched && form.get('startDate')?.hasError('required')) {
               <p class="error-text">Start date is required.</p>
+            }
+            @if (form.get('startDate')?.touched && form.get('startDate')?.hasError('pastDate')) {
+              <p class="error-text">Start date cannot be in the past.</p>
             }
           </div>
           <div>
             <label for="endDate" class="label">End Date & Time *</label>
-            <input id="endDate" type="datetime-local" formControlName="endDate" class="input-field" />
+            <input id="endDate" type="datetime-local" formControlName="endDate" class="input-field" [min]="form.get('startDate')?.value || minDateTime" />
             @if (form.get('endDate')?.touched && form.get('endDate')?.hasError('required')) {
               <p class="error-text">End date is required.</p>
+            }
+            @if (form.get('endDate')?.touched && form.get('endDate')?.hasError('pastDate')) {
+              <p class="error-text">End date cannot be in the past.</p>
             }
           </div>
         </div>

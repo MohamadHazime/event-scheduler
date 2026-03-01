@@ -1,6 +1,6 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule, AbstractControl, ValidationErrors } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { EventService } from '../../../core/services/event.service';
 import { SmartService } from '../../../core/services/smart.service';
@@ -26,8 +26,8 @@ export class EventFormComponent implements OnInit {
   form: FormGroup = this.fb.group({
     title: ['', [Validators.required, Validators.maxLength(300)]],
     description: ['', [Validators.maxLength(2000)]],
-    startDate: ['', [Validators.required]],
-    endDate: ['', [Validators.required]],
+    startDate: ['', [Validators.required, this.pastDateValidator]],
+    endDate: ['', [Validators.required, this.pastDateValidator]],
     location: ['', [Validators.maxLength(500)]],
     category: ['Other']
   });
@@ -44,23 +44,32 @@ export class EventFormComponent implements OnInit {
   showAiParser = false;
   aiInput = '';
   parsingAi = false;
+  minDateTime: string = this.getMinDateTime();
 
   ngOnInit(): void {
-  this.eventId = this.route.snapshot.paramMap.get('id');
-  if (this.eventId) {
-    this.isEditMode = true;
-    this.loadEvent();
-  } else {
-    const start = this.route.snapshot.queryParamMap.get('start');
-    const end = this.route.snapshot.queryParamMap.get('end');
-    if (start && end) {
-      this.form.patchValue({
-        startDate: this.toLocalDatetime(start),
-        endDate: this.toLocalDatetime(end)
-      });
+    this.eventId = this.route.snapshot.paramMap.get('id');
+    if (this.eventId) {
+      this.isEditMode = true;
+      this.loadEvent();
+    } else {
+      const start = this.route.snapshot.queryParamMap.get('start');
+      const end = this.route.snapshot.queryParamMap.get('end');
+      if (start && end) {
+        this.form.patchValue({
+          startDate: this.toLocalDatetime(start),
+          endDate: this.toLocalDatetime(end)
+        });
+      }
     }
+
+    this.form.get('startDate')?.valueChanges.subscribe(startValue => {
+      const endValue = this.form.get('endDate')?.value;
+      if (startValue && endValue && endValue <= startValue) {
+        this.form.patchValue({ endDate: '' });
+      }
+      this.form.get('endDate')?.updateValueAndValidity();
+    });
   }
-}
 
   loadEvent(): void {
     if (!this.eventId) return;
@@ -233,5 +242,22 @@ export class EventFormComponent implements OnInit {
     const offset = d.getTimezoneOffset();
     const local = new Date(d.getTime() - offset * 60 * 1000);
     return local.toISOString().slice(0, 16);
+  }
+
+  private getMinDateTime(): string {
+    const now = new Date();
+    const offset = now.getTimezoneOffset();
+    const local = new Date(now.getTime() - offset * 60 * 1000);
+    return local.toISOString().slice(0, 16);
+  }
+
+  private pastDateValidator(control: AbstractControl): ValidationErrors | null {
+    const value = control.value;
+    if (!value) return null;
+    const selected = new Date(value);
+    if (selected < new Date()) {
+      return { pastDate: true };
+    }
+    return null;
   }
 }

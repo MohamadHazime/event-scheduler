@@ -1,0 +1,119 @@
+<div class="space-y-6">
+  <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Invitations</h1>
+
+  <!-- Tabs -->
+  <div class="flex border-b border-gray-200 dark:border-gray-700">
+    <button (click)="activeTab = 'received'"
+            [class]="activeTab === 'received'
+              ? 'px-4 py-2.5 text-sm font-medium text-primary-600 border-b-2 border-primary-600 dark:text-primary-400 dark:border-primary-400'
+              : 'px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'">
+      Received
+      @if (pendingInvitations.length > 0) {
+        <span class="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-primary-600 rounded-full">
+          {{ pendingInvitations.length }}
+        </span>
+      }
+    </button>
+    <button (click)="activeTab = 'sent'"
+            [class]="activeTab === 'sent'
+              ? 'px-4 py-2.5 text-sm font-medium text-primary-600 border-b-2 border-primary-600 dark:text-primary-400 dark:border-primary-400'
+              : 'px-4 py-2.5 text-sm font-medium text-gray-500 hover:text-gray-700 dark:text-gray-400 dark:hover:text-gray-300'">
+      Sent
+      @if (sentInvitations.length > 0) {
+        <span class="ml-2 inline-flex items-center justify-center w-5 h-5 text-xs font-bold text-white bg-gray-400 rounded-full">
+          {{ sentInvitations.length }}
+        </span>
+      }
+    </button>
+  </div>
+
+  <!-- Loading -->
+  @if (loading) {
+    <div class="flex justify-center py-12">
+      <svg class="animate-spin h-8 w-8 text-primary-600" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+      </svg>
+    </div>
+  } @else {
+    <!-- Received Tab -->
+    @if (activeTab === 'received') {
+      @if (pendingInvitations.length === 0) {
+        <div class="card text-center py-12">
+          <svg class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+          </svg>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">No pending invitations</h3>
+          <p class="text-gray-500 dark:text-gray-400 mt-1">You're all caught up!</p>
+        </div>
+      } @else {
+        <div class="space-y-3">
+          @for (inv of pendingInvitations; track inv.id) {
+            <div class="card flex flex-col sm:flex-row sm:items-center gap-4">
+              <div class="flex-1">
+                <div class="flex items-center gap-2 mb-1">
+                  <h3 class="font-semibold text-gray-900 dark:text-gray-100">{{ inv.eventTitle }}</h3>
+                  <span class="badge {{ getStatusBadge(inv.status) }}">{{ inv.status }}</span>
+                </div>
+                <p class="text-sm text-gray-500 dark:text-gray-400">
+                  Invited by <span class="font-medium">{{ inv.invitedByName }}</span>
+                </p>
+                <p class="text-xs text-gray-400 dark:text-gray-500 mt-1">
+                  Expires {{ formatDate(inv.expiresAt) }}
+                </p>
+              </div>
+              <div class="flex gap-2 shrink-0">
+                <button (click)="accept(inv.token)" class="btn-primary text-sm">Accept</button>
+                <button (click)="decline(inv.token)" class="btn-secondary text-sm">Decline</button>
+                <a [routerLink]="['/events', inv.eventId]" class="btn-secondary text-sm">View Event</a>
+              </div>
+            </div>
+          }
+        </div>
+      }
+    }
+
+    <!-- Sent Tab -->
+    @if (activeTab === 'sent') {
+      @if (sentInvitations.length === 0) {
+        <div class="card text-center py-12">
+          <svg class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"/>
+          </svg>
+          <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">No invitations sent</h3>
+          <p class="text-gray-500 dark:text-gray-400 mt-1">Invite people from an event's detail page.</p>
+        </div>
+      } @else {
+        <div class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="border-b border-gray-200 dark:border-gray-700">
+                <th class="text-left py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Event</th>
+                <th class="text-left py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Invitee</th>
+                <th class="text-left py-3 px-2 font-medium text-gray-500 dark:text-gray-400 hidden sm:table-cell">Sent</th>
+                <th class="text-left py-3 px-2 font-medium text-gray-500 dark:text-gray-400">Status</th>
+              </tr>
+            </thead>
+            <tbody class="divide-y divide-gray-100 dark:divide-gray-700">
+              @for (inv of sentInvitations; track inv.id) {
+                <tr class="hover:bg-gray-50 dark:hover:bg-gray-800/50">
+                  <td class="py-3 px-2">
+                    <a [routerLink]="['/events', inv.eventId]"
+                       class="text-primary-600 dark:text-primary-400 hover:underline font-medium">
+                      {{ inv.eventTitle }}
+                    </a>
+                  </td>
+                  <td class="py-3 px-2 text-gray-700 dark:text-gray-300">{{ inv.inviteeEmail }}</td>
+                  <td class="py-3 px-2 text-gray-500 dark:text-gray-400 hidden sm:table-cell">{{ formatDate(inv.createdAt) }}</td>
+                  <td class="py-3 px-2">
+                    <span class="badge {{ getStatusBadge(inv.status) }}">{{ inv.status }}</span>
+                  </td>
+                </tr>
+              }
+            </tbody>
+          </table>
+        </div>
+      }
+    }
+  }
+</div>

@@ -83,5 +83,6 @@ app.MapAuthEndpoints();
 app.MapEventEndpoints();
 app.MapInvitationEndpoints();
 app.MapSmartEndpoints();
+app.MapAiEndpoints();
 
 app.Run();

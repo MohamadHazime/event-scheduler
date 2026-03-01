@@ -14,11 +14,66 @@
       </h1>
     </div>
 
+    <!-- AI Natural Language Parser -->
+    @if (!isEditMode) {
+      <div class="card mb-6 border-primary-200 dark:border-primary-800 bg-primary-50/50 dark:bg-primary-900/20">
+        <div class="flex items-center justify-between mb-3">
+          <div class="flex items-center gap-2">
+            <span class="badge bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200">AI</span>
+            <h3 class="font-medium text-gray-900 dark:text-gray-100">Create with AI</h3>
+          </div>
+          <button (click)="showAiParser = !showAiParser" class="text-sm text-primary-600 dark:text-primary-400 hover:underline">
+            {{ showAiParser ? 'Hide' : 'Try it' }}
+          </button>
+        </div>
+
+        @if (showAiParser) {
+          <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">
+            Describe your event naturally, and AI will fill in the form for you.
+          </p>
+          <div class="flex flex-col sm:flex-row gap-2">
+            <input
+              type="text"
+              [(ngModel)]="aiInput"
+              class="input-field flex-1"
+              placeholder='e.g. "Team dinner at 7pm Friday at Sushi Place"'
+              (keyup.enter)="parseWithAi()"
+              [ngModelOptions]="{standalone: true}"
+            />
+            <button (click)="parseWithAi()" [disabled]="parsingAi" class="btn-primary text-sm whitespace-nowrap flex items-center gap-2">
+              @if (parsingAi) {
+                <svg class="animate-spin h-4 w-4" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                Parsing...
+              } @else {
+                Parse with AI
+              }
+            </button>
+          </div>
+        }
+      </div>
+    }
+
     <div class="card">
       <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
         <!-- Title -->
         <div>
-          <label for="title" class="label">Title *</label>
+          <div class="flex items-center justify-between mb-1">
+            <label for="title" class="label !mb-0">Title *</label>
+            <button type="button" (click)="suggestTitle()" [disabled]="suggestingTitle"
+                    class="text-xs text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1">
+              @if (suggestingTitle) {
+                <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+              }
+              <span class="badge bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 !text-[10px]">AI</span>
+              Polish title
+            </button>
+          </div>
           <input id="title" type="text" formControlName="title" class="input-field" placeholder="Event title" />
           @if (form.get('title')?.touched && form.get('title')?.hasError('required')) {
             <p class="error-text">Title is required.</p>
@@ -27,7 +82,20 @@
 
         <!-- Description -->
         <div>
-          <label for="description" class="label">Description</label>
+          <div class="flex items-center justify-between mb-1">
+            <label for="description" class="label !mb-0">Description</label>
+            <button type="button" (click)="generateDescription()" [disabled]="generatingDescription"
+                    class="text-xs text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1">
+              @if (generatingDescription) {
+                <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+              }
+              <span class="badge bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 !text-[10px]">AI</span>
+              Generate
+            </button>
+          </div>
           <textarea id="description" formControlName="description" rows="4" class="input-field"
                     placeholder="What's this event about?"></textarea>
         </div>
@@ -62,9 +130,7 @@
 
           @if (conflicts.length > 0) {
             <div class="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
-              <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
-                Conflicts detected:
-              </p>
+              <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">Conflicts detected:</p>
               @for (c of conflicts; track c.id) {
                 <div class="text-sm text-yellow-700 dark:text-yellow-300 ml-2">
                   &bull; {{ c.title }} ({{ formatConflictDate(c.startDate) }} - {{ formatConflictDate(c.endDate) }})
@@ -91,10 +157,9 @@
                   <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
                   <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
                 </svg>
-                Suggesting...
-              } @else {
-                Auto-suggest category
               }
+              <span class="badge bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200 !text-[10px]">AI</span>
+              Auto-suggest
             </button>
           </div>
           <select id="category" formControlName="category" class="input-field">

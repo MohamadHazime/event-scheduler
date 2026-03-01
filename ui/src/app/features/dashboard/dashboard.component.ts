@@ -98,4 +98,23 @@ export class DashboardComponent implements OnInit {
   getAttendancePercent(count: number): number {
     return this.totalAttendance > 0 ? Math.round((count / this.totalAttendance) * 100) : 0;
   }
+
+  formatSlotLabel(slot: SlotSuggestion): string {
+    const start = new Date(slot.start);
+    const end = new Date(slot.end);
+    const today = new Date();
+    const tomorrow = new Date();
+    tomorrow.setDate(today.getDate() + 1);
+
+    const timeRange = start.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+      + ' - ' + end.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' });
+
+    if (start.toDateString() === today.toDateString()) {
+      return `Today ${timeRange}`;
+    }
+    if (start.toDateString() === tomorrow.toDateString()) {
+      return `Tomorrow ${timeRange}`;
+    }
+    return start.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' }) + ' ' + timeRange;
+  }
 }

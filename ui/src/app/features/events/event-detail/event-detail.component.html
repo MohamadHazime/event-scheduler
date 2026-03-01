@@ -1,0 +1,140 @@
+@if (loading) {
+  <div class="flex justify-center py-12">
+    <svg class="animate-spin h-8 w-8 text-primary-600" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+    </svg>
+  </div>
+} @else if (event) {
+  <div class="max-w-3xl mx-auto space-y-6">
+    <!-- Back Link -->
+    <a routerLink="/events" class="text-sm text-primary-600 dark:text-primary-400 hover:underline">&larr; Back to events</a>
+
+    <!-- Event Header -->
+    <div class="card">
+      <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4">
+        <div class="flex-1">
+          <div class="flex items-center gap-2 mb-2">
+            <span class="badge {{ getStatusBadge(event.category) }}">{{ event.category }}</span>
+            @if (currentUserStatus) {
+              <span class="badge {{ getStatusBadge(currentUserStatus) }}">{{ currentUserStatus }}</span>
+            }
+          </div>
+          <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">{{ event.title }}</h1>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Created by {{ event.createdByName }}</p>
+        </div>
+
+        @if (isOwner) {
+          <div class="flex gap-2 shrink-0">
+            <a [routerLink]="['/events', event.id, 'edit']" class="btn-secondary text-sm">Edit</a>
+            <button (click)="deleteEvent()" class="btn-danger text-sm">Delete</button>
+          </div>
+        }
+      </div>
+
+      @if (event.description) {
+        <p class="mt-4 text-gray-700 dark:text-gray-300 whitespace-pre-line">{{ event.description }}</p>
+      }
+
+      <div class="mt-6 grid grid-cols-1 sm:grid-cols-2 gap-4">
+        <div class="flex items-center text-gray-600 dark:text-gray-300">
+          <svg class="w-5 h-5 mr-3 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+          </svg>
+          <div>
+            <p class="text-sm font-medium">Start</p>
+            <p class="text-sm">{{ formatDate(event.startDate) }}</p>
+          </div>
+        </div>
+        <div class="flex items-center text-gray-600 dark:text-gray-300">
+          <svg class="w-5 h-5 mr-3 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+          </svg>
+          <div>
+            <p class="text-sm font-medium">End</p>
+            <p class="text-sm">{{ formatDate(event.endDate) }}</p>
+          </div>
+        </div>
+        @if (event.location) {
+          <div class="flex items-center text-gray-600 dark:text-gray-300 sm:col-span-2">
+            <svg class="w-5 h-5 mr-3 text-gray-400 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+            </svg>
+            <div>
+              <p class="text-sm font-medium">Location</p>
+              <p class="text-sm">{{ event.location }}</p>
+            </div>
+          </div>
+        }
+      </div>
+    </div>
+
+    <!-- RSVP Section -->
+    <div class="card">
+      <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Your Response</h2>
+      <div class="flex flex-wrap gap-2">
+        @for (status of statuses; track status) {
+          <button (click)="updateStatus(status)"
+                  [class]="currentUserStatus === status
+                    ? 'btn-primary text-sm'
+                    : 'btn-secondary text-sm'">
+            {{ status }}
+          </button>
+        }
+      </div>
+    </div>
+
+    <!-- Attendees -->
+    <div class="card">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">
+          Attendees ({{ event.attendees.length }})
+        </h2>
+        @if (isOwner) {
+          <button (click)="showInviteForm = !showInviteForm" class="btn-secondary text-sm">
+            {{ showInviteForm ? 'Cancel' : '+ Invite' }}
+          </button>
+        }
+      </div>
+
+      <!-- Invite Form -->
+      @if (showInviteForm) {
+        <form [formGroup]="inviteForm" (ngSubmit)="sendInvite()"
+              class="flex flex-col sm:flex-row gap-2 mb-4 p-3 bg-gray-50 dark:bg-gray-800 rounded-lg">
+          <input type="email" formControlName="email" class="input-field flex-1" placeholder="Enter email address" />
+          <button type="submit" [disabled]="inviting" class="btn-primary text-sm whitespace-nowrap">
+            {{ inviting ? 'Sending...' : 'Send Invite' }}
+          </button>
+        </form>
+        @if (inviteForm.get('email')?.touched && inviteForm.get('email')?.hasError('email')) {
+          <p class="error-text -mt-2 mb-2">Please enter a valid email.</p>
+        }
+      }
+
+      <!-- Attendee List -->
+      @if (event.attendees.length === 0) {
+        <p class="text-sm text-gray-500 dark:text-gray-400">No attendees yet.</p>
+      } @else {
+        <div class="divide-y divide-gray-100 dark:divide-gray-700">
+          @for (attendee of event.attendees; track attendee.userId) {
+            <div class="flex items-center justify-between py-3">
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-primary-100 dark:bg-primary-900 flex items-center justify-center">
+                  <span class="text-sm font-medium text-primary-700 dark:text-primary-300">
+                    {{ attendee.fullName.charAt(0).toUpperCase() }}
+                  </span>
+                </div>
+                <div>
+                  <p class="text-sm font-medium text-gray-900 dark:text-gray-100">{{ attendee.fullName }}</p>
+                  <p class="text-xs text-gray-500 dark:text-gray-400">{{ attendee.email }}</p>
+                </div>
+              </div>
+              <span class="badge {{ getStatusBadge(attendee.status) }}">{{ attendee.status }}</span>
+            </div>
+          }
+        </div>
+      }
+    </div>
+  </div>
+}

@@ -1,0 +1,125 @@
+@if (loadingEvent) {
+  <div class="flex justify-center py-12">
+    <svg class="animate-spin h-8 w-8 text-primary-600" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+    </svg>
+  </div>
+} @else {
+  <div class="max-w-2xl mx-auto">
+    <div class="mb-6">
+      <a routerLink="/events" class="text-sm text-primary-600 dark:text-primary-400 hover:underline">&larr; Back to events</a>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100 mt-2">
+        {{ isEditMode ? 'Edit Event' : 'Create Event' }}
+      </h1>
+    </div>
+
+    <div class="card">
+      <form [formGroup]="form" (ngSubmit)="onSubmit()" class="space-y-5">
+        <!-- Title -->
+        <div>
+          <label for="title" class="label">Title *</label>
+          <input id="title" type="text" formControlName="title" class="input-field" placeholder="Event title" />
+          @if (form.get('title')?.touched && form.get('title')?.hasError('required')) {
+            <p class="error-text">Title is required.</p>
+          }
+        </div>
+
+        <!-- Description -->
+        <div>
+          <label for="description" class="label">Description</label>
+          <textarea id="description" formControlName="description" rows="4" class="input-field"
+                    placeholder="What's this event about?"></textarea>
+        </div>
+
+        <!-- Date/Time Row -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div>
+            <label for="startDate" class="label">Start Date & Time *</label>
+            <input id="startDate" type="datetime-local" formControlName="startDate" class="input-field" />
+            @if (form.get('startDate')?.touched && form.get('startDate')?.hasError('required')) {
+              <p class="error-text">Start date is required.</p>
+            }
+          </div>
+          <div>
+            <label for="endDate" class="label">End Date & Time *</label>
+            <input id="endDate" type="datetime-local" formControlName="endDate" class="input-field" />
+            @if (form.get('endDate')?.touched && form.get('endDate')?.hasError('required')) {
+              <p class="error-text">End date is required.</p>
+            }
+          </div>
+        </div>
+
+        <!-- Conflict Check -->
+        <div>
+          <button type="button" (click)="checkConflicts()"
+                  class="text-sm text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1">
+            <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+            </svg>
+            Check for conflicts
+          </button>
+
+          @if (conflicts.length > 0) {
+            <div class="mt-2 p-3 bg-yellow-50 dark:bg-yellow-900/30 border border-yellow-200 dark:border-yellow-800 rounded-lg">
+              <p class="text-sm font-medium text-yellow-800 dark:text-yellow-200 mb-2">
+                Conflicts detected:
+              </p>
+              @for (c of conflicts; track c.id) {
+                <div class="text-sm text-yellow-700 dark:text-yellow-300 ml-2">
+                  &bull; {{ c.title }} ({{ formatConflictDate(c.startDate) }} - {{ formatConflictDate(c.endDate) }})
+                </div>
+              }
+            </div>
+          }
+        </div>
+
+        <!-- Location -->
+        <div>
+          <label for="location" class="label">Location</label>
+          <input id="location" type="text" formControlName="location" class="input-field" placeholder="Where is this event?" />
+        </div>
+
+        <!-- Category -->
+        <div>
+          <div class="flex items-center justify-between mb-1">
+            <label for="category" class="label !mb-0">Category</label>
+            <button type="button" (click)="autoCategorize()" [disabled]="categorizingAi"
+                    class="text-xs text-primary-600 dark:text-primary-400 hover:underline flex items-center gap-1">
+              @if (categorizingAi) {
+                <svg class="animate-spin h-3 w-3" fill="none" viewBox="0 0 24 24">
+                  <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                  <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+                </svg>
+                Suggesting...
+              } @else {
+                Auto-suggest category
+              }
+            </button>
+          </div>
+          <select id="category" formControlName="category" class="input-field">
+            @for (cat of categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+        </div>
+
+        <!-- Actions -->
+        <div class="flex flex-col sm:flex-row gap-3 pt-4 border-t border-gray-200 dark:border-gray-700">
+          <button type="submit" [disabled]="loading" class="btn-primary flex-1 flex items-center justify-center gap-2">
+            @if (loading) {
+              <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24">
+                <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+              </svg>
+              Saving...
+            } @else {
+              {{ isEditMode ? 'Update Event' : 'Create Event' }}
+            }
+          </button>
+          <a routerLink="/events" class="btn-secondary flex-1 text-center">Cancel</a>
+        </div>
+      </form>
+    </div>
+  </div>
+}

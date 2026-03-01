@@ -4,8 +4,8 @@ A full-stack event scheduling application with AI-powered features, built with .
 
 ## Live Demo
 
-- **Frontend:** https://event-scheduler-xxxx.onrender.com
-- **Backend API:** https://event-scheduler-api-xxxx.onrender.com/swagger
+- **Frontend:** https://event-scheduler-ui.onrender.com
+- **Backend API:** https://event-scheduler-api-zzw5.onrender.com/swagger
 
 ## Features
 
@@ -61,7 +61,7 @@ A full-stack event scheduling application with AI-powered features, built with .
 2. Run the following commands:
 
 ```bash
-cd backend
+cd api
 dotnet restore
 dotnet ef database update --project src/EventScheduler.Infrastructure --startup-project src/EventScheduler.API
 dotnet run --project src/EventScheduler.API
@@ -70,7 +70,7 @@ dotnet run --project src/EventScheduler.API
 ### Frontend
 
 ```bash
-cd frontend
+cd ui
 npm install
 ng serve
 ```

@@ -12,7 +12,8 @@ public class GroqAiService : IAiService
     public GroqAiService(IConfiguration configuration)
     {
         var apiKey = configuration["Ai:ApiKey"]
-            ?? throw new InvalidOperationException("Ai:ApiKey is not configured.");
+            ?? Environment.GetEnvironmentVariable("AI_API_KEY")
+            ?? throw new InvalidOperationException("AI API Key is not configured.");
 
         var options = new OpenAI.OpenAIClientOptions
         {

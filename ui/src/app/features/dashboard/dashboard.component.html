@@ -1,0 +1,215 @@
+@if (loading) {
+  <div class="flex justify-center py-12">
+    <svg class="animate-spin h-8 w-8 text-primary-600" fill="none" viewBox="0 0 24 24">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+      <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+    </svg>
+  </div>
+} @else {
+  <div class="space-y-6">
+    <!-- Welcome -->
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">
+        Welcome back, {{ authService.user()?.fullName }}
+      </h1>
+      <p class="text-gray-500 dark:text-gray-400 mt-1">Here's your event overview</p>
+    </div>
+
+    <!-- Stats Cards -->
+    @if (analytics) {
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="card text-center">
+          <p class="text-3xl font-bold text-primary-600 dark:text-primary-400">{{ analytics.totalEvents }}</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Total Events</p>
+        </div>
+        <div class="card text-center">
+          <p class="text-3xl font-bold text-blue-600 dark:text-blue-400">{{ analytics.upcomingEvents }}</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Upcoming</p>
+        </div>
+        <div class="card text-center">
+          <p class="text-3xl font-bold text-green-600 dark:text-green-400">{{ analytics.attendanceStats.attending }}</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Attending</p>
+        </div>
+        <div class="card text-center">
+          <p class="text-3xl font-bold text-yellow-600 dark:text-yellow-400">{{ pendingInvitations.length }}</p>
+          <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">Pending Invites</p>
+        </div>
+      </div>
+    }
+
+    <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+      <!-- Upcoming Events -->
+      <div class="card">
+        <div class="flex items-center justify-between mb-4">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Upcoming Events</h2>
+          <a routerLink="/events" class="text-sm text-primary-600 dark:text-primary-400 hover:underline">View all</a>
+        </div>
+
+        @if (upcomingEvents.length === 0) {
+          <p class="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">No upcoming events</p>
+        } @else {
+          <div class="space-y-3">
+            @for (event of upcomingEvents; track event.id) {
+              <a [routerLink]="['/events', event.id]"
+                 class="block p-3 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors border border-gray-100 dark:border-gray-700">
+                <div class="flex items-start gap-3">
+                  <div class="w-1 h-12 rounded-full {{ getCategoryColor(event.category) }} shrink-0 mt-0.5"></div>
+                  <div class="flex-1 min-w-0">
+                    <p class="font-medium text-gray-900 dark:text-gray-100 truncate">{{ event.title }}</p>
+                    <p class="text-sm text-gray-500 dark:text-gray-400">{{ formatDate(event.startDate) }}</p>
+                    @if (event.location) {
+                      <p class="text-xs text-gray-400 dark:text-gray-500 truncate">{{ event.location }}</p>
+                    }
+                  </div>
+                  <span class="text-xs text-gray-400 dark:text-gray-500 shrink-0">
+                    {{ event.attendees.length }} going
+                  </span>
+                </div>
+              </a>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- AI Scheduling Suggestions -->
+      <div class="card">
+        <div class="flex items-center gap-2 mb-4">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">AI Scheduling Assistant</h2>
+          <span class="badge bg-primary-100 text-primary-800 dark:bg-primary-900 dark:text-primary-200">AI</span>
+        </div>
+        <p class="text-sm text-gray-500 dark:text-gray-400 mb-3">Suggested free 1-hour slots in the next 3 days:</p>
+
+        @if (slots.length === 0) {
+          <p class="text-sm text-gray-500 dark:text-gray-400 py-4 text-center">No suggestions available</p>
+        } @else {
+          <div class="space-y-2">
+            @for (slot of slots; track slot.start) {
+              <div class="flex items-center justify-between p-3 bg-green-50 dark:bg-green-900/20 rounded-lg border border-green-200 dark:border-green-800">
+                <div class="flex items-center gap-2">
+                  <svg class="w-4 h-4 text-green-600 dark:text-green-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                  </svg>
+                  <span class="text-sm font-medium text-green-800 dark:text-green-200">{{ slot.label }}</span>
+                </div>
+                <a routerLink="/events/new" class="text-xs text-primary-600 dark:text-primary-400 hover:underline">Book it</a>
+              </div>
+            }
+          </div>
+        }
+      </div>
+
+      <!-- Events by Category -->
+      @if (analytics && analytics.eventsByCategory.length > 0) {
+        <div class="card">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Events by Category</h2>
+          <div class="space-y-3">
+            @for (cat of analytics.eventsByCategory; track cat.category) {
+              <div>
+                <div class="flex items-center justify-between text-sm mb-1">
+                  <span class="text-gray-700 dark:text-gray-300">{{ cat.category }}</span>
+                  <span class="text-gray-500 dark:text-gray-400">{{ cat.count }}</span>
+                </div>
+                <div class="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2.5">
+                  <div class="h-2.5 rounded-full {{ getCategoryColor(cat.category) }} transition-all duration-500"
+                       [style.width.%]="getBarWidth(cat.count)"></div>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Attendance Breakdown -->
+      @if (analytics && totalAttendance > 0) {
+        <div class="card">
+          <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Attendance Breakdown</h2>
+          <div class="grid grid-cols-2 gap-4">
+            <div class="text-center p-3 bg-green-50 dark:bg-green-900/20 rounded-lg">
+              <p class="text-2xl font-bold text-green-600 dark:text-green-400">
+                {{ getAttendancePercent(analytics.attendanceStats.attending) }}%
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Attending</p>
+            </div>
+            <div class="text-center p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg">
+              <p class="text-2xl font-bold text-yellow-600 dark:text-yellow-400">
+                {{ getAttendancePercent(analytics.attendanceStats.maybe) }}%
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Maybe</p>
+            </div>
+            <div class="text-center p-3 bg-red-50 dark:bg-red-900/20 rounded-lg">
+              <p class="text-2xl font-bold text-red-600 dark:text-red-400">
+                {{ getAttendancePercent(analytics.attendanceStats.declined) }}%
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Declined</p>
+            </div>
+            <div class="text-center p-3 bg-blue-50 dark:bg-blue-900/20 rounded-lg">
+              <p class="text-2xl font-bold text-blue-600 dark:text-blue-400">
+                {{ getAttendancePercent(analytics.attendanceStats.upcoming) }}%
+              </p>
+              <p class="text-xs text-gray-500 dark:text-gray-400 mt-1">Upcoming</p>
+            </div>
+          </div>
+        </div>
+      }
+
+      <!-- Pending Invitations -->
+      @if (pendingInvitations.length > 0) {
+        <div class="card lg:col-span-2">
+          <div class="flex items-center justify-between mb-4">
+            <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100">Pending Invitations</h2>
+            <a routerLink="/invitations" class="text-sm text-primary-600 dark:text-primary-400 hover:underline">View all</a>
+          </div>
+          <div class="space-y-3">
+            @for (inv of pendingInvitations; track inv.id) {
+              <div class="flex flex-col sm:flex-row sm:items-center justify-between p-3 bg-gray-50 dark:bg-gray-800 rounded-lg gap-3">
+                <div>
+                  <p class="font-medium text-gray-900 dark:text-gray-100">{{ inv.eventTitle }}</p>
+                  <p class="text-sm text-gray-500 dark:text-gray-400">From {{ inv.invitedByName }}</p>
+                </div>
+                <div class="flex gap-2 shrink-0">
+                  <a [routerLink]="['/events', inv.eventId]" class="btn-secondary text-sm">View</a>
+                  <a routerLink="/invitations" class="btn-primary text-sm">Respond</a>
+                </div>
+              </div>
+            }
+          </div>
+        </div>
+      }
+
+      <!-- Quick Actions -->
+      <div class="card lg:col-span-2">
+        <h2 class="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Quick Actions</h2>
+        <div class="grid grid-cols-2 sm:grid-cols-4 gap-3">
+          <a routerLink="/events/new"
+             class="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors text-center">
+            <svg class="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 6v6m0 0v6m0-6h6m-6 0H6"/>
+            </svg>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-300">New Event</span>
+          </a>
+          <a routerLink="/events"
+             class="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors text-center">
+            <svg class="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+            </svg>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-300">My Events</span>
+          </a>
+          <a routerLink="/invitations"
+             class="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors text-center">
+            <svg class="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 8l7.89 5.26a2 2 0 002.22 0L21 8M5 19h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v10a2 2 0 002 2z"/>
+            </svg>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Invitations</span>
+          </a>
+          <a routerLink="/events"
+             class="flex flex-col items-center justify-center p-4 rounded-lg border-2 border-dashed border-gray-300 dark:border-gray-600 hover:border-primary-500 dark:hover:border-primary-400 hover:bg-primary-50 dark:hover:bg-primary-900/20 transition-colors text-center">
+            <svg class="w-8 h-8 text-gray-400 mb-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+            </svg>
+            <span class="text-sm font-medium text-gray-600 dark:text-gray-300">Search</span>
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+}

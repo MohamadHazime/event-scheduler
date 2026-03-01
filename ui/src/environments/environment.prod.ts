@@ -1,4 +1,4 @@
 export const environment = {
   production: true,
-  apiUrl: '/api'
+  apiUrl: 'https://event-scheduler-api-zzw5.onrender.com/api',
 };

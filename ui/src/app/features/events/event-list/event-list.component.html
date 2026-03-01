@@ -1,0 +1,166 @@
+<div class="space-y-6">
+  <!-- Header -->
+  <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+    <div>
+      <h1 class="text-2xl font-bold text-gray-900 dark:text-gray-100">Events</h1>
+      <p class="text-sm text-gray-500 dark:text-gray-400 mt-1">{{ totalCount }} event(s) found</p>
+    </div>
+    <div class="flex gap-2">
+      <button (click)="filtersOpen = !filtersOpen" class="btn-secondary text-sm">
+        <svg class="w-4 h-4 inline mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 4a1 1 0 011-1h16a1 1 0 011 1v2.586a1 1 0 01-.293.707l-6.414 6.414a1 1 0 00-.293.707V17l-4 4v-6.586a1 1 0 00-.293-.707L3.293 7.293A1 1 0 013 6.586V4z"/>
+        </svg>
+        Filters
+      </button>
+      <a routerLink="/events/new" class="btn-primary text-sm">
+        + New Event
+      </a>
+    </div>
+  </div>
+
+  <!-- Filters -->
+  @if (filtersOpen) {
+    <div class="card">
+      <form [formGroup]="filterForm" (ngSubmit)="applyFilters()" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4">
+        <div>
+          <label class="label">Title</label>
+          <input formControlName="title" class="input-field" placeholder="Search by title..." />
+        </div>
+        <div>
+          <label class="label">Location</label>
+          <input formControlName="location" class="input-field" placeholder="Search by location..." />
+        </div>
+        <div>
+          <label class="label">Category</label>
+          <select formControlName="category" class="input-field">
+            <option value="">All Categories</option>
+            @for (cat of categories; track cat) {
+              <option [value]="cat">{{ cat }}</option>
+            }
+          </select>
+        </div>
+        <div>
+          <label class="label">From Date</label>
+          <input type="datetime-local" formControlName="fromDate" class="input-field" />
+        </div>
+        <div>
+          <label class="label">To Date</label>
+          <input type="datetime-local" formControlName="toDate" class="input-field" />
+        </div>
+        <div class="flex items-end gap-2">
+          <button type="submit" class="btn-primary text-sm flex-1">Apply</button>
+          <button type="button" (click)="clearFilters()" class="btn-secondary text-sm flex-1">Clear</button>
+        </div>
+      </form>
+    </div>
+  }
+
+  <!-- Loading -->
+  @if (loading) {
+    <div class="flex justify-center py-12">
+      <svg class="animate-spin h-8 w-8 text-primary-600" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z"></path>
+      </svg>
+    </div>
+  }
+
+  <!-- Event Cards -->
+  @if (!loading) {
+    @if (events.length === 0) {
+      <div class="card text-center py-12">
+        <svg class="w-16 h-16 mx-auto text-gray-300 dark:text-gray-600 mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+          <path stroke-linecap="round" stroke-linejoin="round" stroke-width="1.5" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+        </svg>
+        <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100">No events found</h3>
+        <p class="text-gray-500 dark:text-gray-400 mt-1">Create your first event to get started.</p>
+        <a routerLink="/events/new" class="btn-primary mt-4 inline-block text-sm">+ Create Event</a>
+      </div>
+    } @else {
+      <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+        @for (event of events; track event.id) {
+          <div class="card hover:shadow-md transition-shadow duration-200 flex flex-col">
+            <div class="flex items-start justify-between mb-3">
+              <span class="badge {{ getCategoryColor(event.category) }}">{{ event.category }}</span>
+              @if (isOwner(event)) {
+                <div class="flex gap-1">
+                  <a [routerLink]="['/events', event.id, 'edit']"
+                     class="p-1.5 rounded-lg text-gray-400 hover:text-primary-600 hover:bg-primary-50 dark:hover:bg-primary-900 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 5H6a2 2 0 00-2 2v11a2 2 0 002 2h11a2 2 0 002-2v-5m-1.414-9.414a2 2 0 112.828 2.828L11.828 15H9v-2.828l8.586-8.586z"/>
+                    </svg>
+                  </a>
+                  <button (click)="deleteEvent(event.id, event.title)"
+                          class="p-1.5 rounded-lg text-gray-400 hover:text-red-600 hover:bg-red-50 dark:hover:bg-red-900 transition-colors">
+                    <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 7l-.867 12.142A2 2 0 0116.138 21H7.862a2 2 0 01-1.995-1.858L5 7m5 4v6m4-6v6m1-10V4a1 1 0 00-1-1h-4a1 1 0 00-1 1v3M4 7h16"/>
+                    </svg>
+                  </button>
+                </div>
+              }
+            </div>
+
+            <a [routerLink]="['/events', event.id]" class="block flex-1">
+              <h3 class="text-lg font-semibold text-gray-900 dark:text-gray-100 hover:text-primary-600 dark:hover:text-primary-400 transition-colors">
+                {{ event.title }}
+              </h3>
+
+              <p class="text-sm text-gray-500 dark:text-gray-400 mt-1 line-clamp-2">
+                {{ event.description || 'No description' }}
+              </p>
+
+              <div class="mt-4 space-y-2">
+                <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                  <svg class="w-4 h-4 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"/>
+                  </svg>
+                  {{ formatDate(event.startDate) }}
+                </div>
+
+                @if (event.location) {
+                  <div class="flex items-center text-sm text-gray-600 dark:text-gray-300">
+                    <svg class="w-4 h-4 mr-2 shrink-0" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17.657 16.657L13.414 20.9a1.998 1.998 0 01-2.827 0l-4.244-4.243a8 8 0 1111.314 0z"/>
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M15 11a3 3 0 11-6 0 3 3 0 016 0z"/>
+                    </svg>
+                    {{ event.location }}
+                  </div>
+                }
+              </div>
+            </a>
+
+            <div class="mt-4 pt-3 border-t border-gray-100 dark:border-gray-700 flex items-center justify-between">
+              <div class="flex items-center text-sm text-gray-500 dark:text-gray-400">
+                <svg class="w-4 h-4 mr-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 20h5v-2a3 3 0 00-5.356-1.857M17 20H7m10 0v-2c0-.656-.126-1.283-.356-1.857M7 20H2v-2a3 3 0 015.356-1.857M7 20v-2c0-.656.126-1.283.356-1.857m0 0a5.002 5.002 0 019.288 0M15 7a3 3 0 11-6 0 3 3 0 016 0z"/>
+                </svg>
+                {{ event.attendees.length }} attendee(s)
+              </div>
+              <span class="text-xs text-gray-400 dark:text-gray-500">by {{ event.createdByName }}</span>
+            </div>
+          </div>
+        }
+      </div>
+
+      <!-- Pagination -->
+      @if (totalPages > 1) {
+        <div class="flex justify-center items-center gap-1 mt-6">
+          <button (click)="goToPage(page - 1)" [disabled]="page === 1"
+                  class="btn-secondary text-sm !px-3 !py-1.5">
+            Prev
+          </button>
+          @for (p of getPages(); track p) {
+            <button (click)="goToPage(p)"
+                    [class]="p === page ? 'btn-primary text-sm !px-3 !py-1.5' : 'btn-secondary text-sm !px-3 !py-1.5'">
+              {{ p }}
+            </button>
+          }
+          <button (click)="goToPage(page + 1)" [disabled]="page === totalPages"
+                  class="btn-secondary text-sm !px-3 !py-1.5">
+            Next
+          </button>
+        </div>
+      }
+    }
+  }
+</div>

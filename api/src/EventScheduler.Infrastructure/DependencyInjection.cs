@@ -28,6 +28,7 @@ public static class DependencyInjection
 
         services.AddScoped<ITokenService, JwtTokenService>();
         services.AddScoped<IPasswordHasher, PasswordHasher>();
+        services.AddSingleton<IAiService, GroqAiService>();
 
         return services;
     }

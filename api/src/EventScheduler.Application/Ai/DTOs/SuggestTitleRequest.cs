@@ -1,0 +1,1 @@
+﻿public record SuggestTitleRequest(string Input);

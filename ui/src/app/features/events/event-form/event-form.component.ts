@@ -1,22 +1,24 @@
 import { Component, inject, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { ReactiveFormsModule, FormBuilder, FormGroup, Validators, FormsModule } from '@angular/forms';
 import { Router, ActivatedRoute, RouterLink } from '@angular/router';
 import { EventService } from '../../../core/services/event.service';
 import { SmartService } from '../../../core/services/smart.service';
+import { AiService } from '../../../core/services/ai.service';
 import { ToastService } from '../../../core/services/toast.service';
 import { ConflictingEvent } from '../../../core/models/smart.models';
 
 @Component({
   selector: 'app-event-form',
   standalone: true,
-  imports: [CommonModule, ReactiveFormsModule, RouterLink],
+  imports: [CommonModule, ReactiveFormsModule, RouterLink, FormsModule],
   templateUrl: './event-form.component.html'
 })
 export class EventFormComponent implements OnInit {
   private fb = inject(FormBuilder);
   private eventService = inject(EventService);
   private smartService = inject(SmartService);
+  private aiService = inject(AiService);
   private toast = inject(ToastService);
   private router = inject(Router);
   private route = inject(ActivatedRoute);
@@ -37,14 +39,28 @@ export class EventFormComponent implements OnInit {
   categories = ['Meeting', 'Social', 'Health', 'Work', 'Personal', 'Other'];
   conflicts: ConflictingEvent[] = [];
   categorizingAi = false;
+  generatingDescription = false;
+  suggestingTitle = false;
+  showAiParser = false;
+  aiInput = '';
+  parsingAi = false;
 
   ngOnInit(): void {
-    this.eventId = this.route.snapshot.paramMap.get('id');
-    if (this.eventId) {
-      this.isEditMode = true;
-      this.loadEvent();
+  this.eventId = this.route.snapshot.paramMap.get('id');
+  if (this.eventId) {
+    this.isEditMode = true;
+    this.loadEvent();
+  } else {
+    const start = this.route.snapshot.queryParamMap.get('start');
+    const end = this.route.snapshot.queryParamMap.get('end');
+    if (start && end) {
+      this.form.patchValue({
+        startDate: this.toLocalDatetime(start),
+        endDate: this.toLocalDatetime(end)
+      });
     }
   }
+}
 
   loadEvent(): void {
     if (!this.eventId) return;
@@ -124,16 +140,80 @@ export class EventFormComponent implements OnInit {
     });
   }
 
+  // --- AI Features ---
+
+  parseWithAi(): void {
+    if (!this.aiInput.trim()) return;
+
+    this.parsingAi = true;
+    this.aiService.parseEvent({ input: this.aiInput }).subscribe({
+      next: (result) => {
+        this.form.patchValue({
+          title: result.title,
+          description: result.description,
+          startDate: this.toLocalDatetime(result.startDate),
+          endDate: this.toLocalDatetime(result.endDate),
+          location: result.location,
+          category: result.category
+        });
+        this.parsingAi = false;
+        this.showAiParser = false;
+        this.aiInput = '';
+        this.toast.success('AI filled in the event details!');
+      },
+      error: (err) => {
+        this.parsingAi = false;
+        this.toast.error(err.error?.error || 'AI parsing failed.');
+      }
+    });
+  }
+
+  generateDescription(): void {
+    const { title, category, location } = this.form.value;
+    if (!title) { this.toast.warning('Enter a title first.'); return; }
+
+    this.generatingDescription = true;
+    this.aiService.generateDescription({ title, category, location }).subscribe({
+      next: (result) => {
+        this.form.patchValue({ description: result.text });
+        this.generatingDescription = false;
+        this.toast.success('AI generated description!');
+      },
+      error: () => {
+        this.generatingDescription = false;
+        this.toast.error('Failed to generate description.');
+      }
+    });
+  }
+
+  suggestTitle(): void {
+    const title = this.form.value.title;
+    if (!title) return;
+
+    this.suggestingTitle = true;
+    this.aiService.suggestTitle(title).subscribe({
+      next: (result) => {
+        this.form.patchValue({ title: result.text });
+        this.suggestingTitle = false;
+        this.toast.info('Title polished by AI!');
+      },
+      error: () => {
+        this.suggestingTitle = false;
+        this.toast.error('Failed to suggest title.');
+      }
+    });
+  }
+
   autoCategorize(): void {
     const { title, description } = this.form.value;
     if (!title) return;
 
     this.categorizingAi = true;
-    this.smartService.categorize({ title, description }).subscribe({
+    this.aiService.categorize(title, description).subscribe({
       next: (result) => {
         this.form.patchValue({ category: result.suggestedCategory });
         this.categorizingAi = false;
-        this.toast.info(`Suggested category: ${result.suggestedCategory}`);
+        this.toast.info(`AI suggested: ${result.suggestedCategory}`);
       },
       error: () => {
         this.categorizingAi = false;

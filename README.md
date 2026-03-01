@@ -57,7 +57,7 @@ A full-stack event scheduling application with AI-powered features, built with .
 
 ### Backend
 
-1. Update the connection string in `backend/src/EventScheduler.API/appsettings.json`
+1. Update the connection string in `api/src/EventScheduler.API/appsettings.json`
 2. Run the following commands:
 
 ```bash
@@ -81,14 +81,14 @@ Open http://localhost:4200
 
 ```
 event-scheduler/
-|-- backend/
+|-- api/
 |   |-- src/
 |   |   |-- EventScheduler.Domain/          (Entities, Value Objects, Enums, Interfaces)
 |   |   |-- EventScheduler.Application/     (CQRS Commands/Queries, DTOs, Interfaces)
 |   |   |-- EventScheduler.Infrastructure/  (EF Core, Repositories, External Services)
 |   |   |-- EventScheduler.API/             (Minimal API Endpoints, Program.cs)
 |   |-- Dockerfile
-|-- frontend/
+|-- ui/
 |   |-- src/app/
 |       |-- core/       (Services, Guards, Interceptors, Models)
 |       |-- features/   (Auth, Events, Invitations, Dashboard)

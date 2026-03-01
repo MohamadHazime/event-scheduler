@@ -4,7 +4,7 @@ A full-stack event scheduling application with AI-powered features, built with .
 
 ## Live Demo
 
-- **Frontend:** https://event-scheduler-ui.onrender.com
+- **Frontend:** https://event-scheduler-fkty.onrender.com
 - **Backend API:** https://event-scheduler-api-zzw5.onrender.com/swagger
 
 ## Features
